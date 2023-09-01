@@ -1,0 +1,112 @@
+{% extends "app/layout.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>Driver Dashboard</h1>
+
+    <form id="zip-form">
+        <div class="zip-input d-flex align-items-center">
+            <input type="text" placeholder="Zip Code" autocomplete="off" maxlength="8" name="zip" class="form-control">
+            <button type="submit">Get Address</button>
+        </div>
+    </form>
+
+    <div id="address-result"></div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Pickup Location</th>
+                <th>Destination</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for request in job_requests %}
+            <tr>
+                <td>{{ request.pickup_location }}</td>
+                <td>{{ request.destination }}</td>
+                <td>{{ request.date }}</td>
+                <td>{{ request.time }}</td>
+                <td>
+                    {% if not request.driver_accepted %}
+                    <a href="#" class="btn btn-success accept-btn" data-request-id="{{ request.id }}">Accept</a>
+                    <a href="{% url 'decline_request' request.id %}" class="btn btn-danger">Decline</a>
+                    {% else %}
+                    Accepted
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal for entering phone number -->
+<div class="modal" id="phoneNumberModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Enter Phone Number</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="phoneNumberForm">
+                    {% csrf_token %}
+                    <input type="text" name="phone_number" class="form-control" placeholder="Phone Number">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="submitPhoneNumber">Submit</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Handle "Accept" button click
+    $(".accept-btn").on("click", function () {
+        var requestId = $(this).data('request-id'); // Get the request ID
+        $("#phoneNumberModal").modal("show");
+        // Store the request ID in a hidden input field
+        $("#phoneNumberForm").append(`<input type="hidden" name="request_id" value="${requestId}">`);
+    });
+
+    // Handle "Submit" button click
+    $("#submitPhoneNumber").on("click", function () {
+        $.ajax({
+            type: "POST",
+            url: "{% url 'accept_request' 0 %}",  // Use a dummy value for now
+            data: $("#phoneNumberForm").serialize(),
+            success: function () {
+                location.reload(); // Refresh the page after accepting
+            }
+        });
+    });
+
+    // Handle zip code form submission
+    $("#zip-form").submit(function (e) {
+        e.preventDefault();
+
+        var zipCode = $("input[name='zip']").val();
+
+        $.ajax({
+            type: "GET",
+            url: "{% url 'get_address' %}",
+            data: { zip: zipCode },
+            success: function (data) {
+                $("#address-result").text(data.address);
+            },
+            error: function () {
+                $("#address-result").text("Error fetching address.");
+            }
+        });
+    });
+</script>
+
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "app/layout.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <h1>Book a Ride</h1>
+
+    <form method="post" action="{% url 'create_service_request' %}">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="{{ form.pickup_location.id_for_label }}">Pickup Location</label>
+            <input type="text" id="{{ form.pickup_location.id_for_label }}" name="{{ form.pickup_location.name }}" required>
+            <button type="button" id="pickup-locate-btn">Locate</button>
+        </div>
+        <div class="form-group">
+            <label for="{{ form.destination.id_for_label }}">Destination</label>
+            <input type="text" id="{{ form.destination.id_for_label }}" name="{{ form.destination.name }}" required>
+            <button type="button" id="destination-locate-btn">Locate</button>
+        </div>
+        <div class="form-group">
+            <label for="{{ form.date.id_for_label }}">Date</label>
+            <input type="date" id="{{ form.date.id_for_label }}" name="{{ form.date.name }}" required>
+        </div>
+        <div class="form-group">
+            <label for="{{ form.time.id_for_label }}">Time</label>
+            <input type="time" id="{{ form.time.id_for_label }}" name="{{ form.time.name }}" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Book Ride</button>
+    </form>
+</div>
+
+<script src="{% static 'app/js/custom.js' %}"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places"></script>
+<script>
+    document.getElementById("pickup-locate-btn").addEventListener("click", function () {
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(function (position) {
+                var latitude = position.coords.latitude;
+                var longitude = position.coords.longitude;
+                document.getElementById("{{ form.pickup_location.id_for_label }}").value = latitude + ", " + longitude;
+            });
+        } else {
+            alert("Geolocation is not available.");
+        }
+    });
+
+    document.getElementById("destination-locate-btn").addEventListener("click", function () {
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(function (position) {
+                var latitude = position.coords.latitude;
+                var longitude = position.coords.longitude;
+                document.getElementById("{{ form.destination.id_for_label }}").value = latitude + ", " + longitude;
+            });
+        } else {
+            alert("Geolocation is not available.");
+        }
+    });
+</script>
+{% endblock %}
